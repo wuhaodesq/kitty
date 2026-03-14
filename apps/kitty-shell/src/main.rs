@@ -4,7 +4,7 @@ fn main() {
     let prompt = std::env::var("KITTY_PROMPT").ok();
     let domain = std::env::var("KITTY_DOMAIN").ok();
 
-    let summary = match (prompt, domain) {
+    let result = match (prompt, domain) {
         (None, None) => run_demo(),
         (prompt, domain) => {
             let mut config = DemoConfig::default();
@@ -18,5 +18,11 @@ fn main() {
         }
     };
 
-    print_summary(&summary);
+    match result {
+        Ok(summary) => print_summary(&summary),
+        Err(err) => {
+            eprintln!("kitty-shell demo failed: {err:?}");
+            std::process::exit(1);
+        }
+    }
 }

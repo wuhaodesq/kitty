@@ -1,9 +1,9 @@
 use kitty_3d::{Camera, Entity, Mesh, Pipeline, Scene};
-use kitty_ai::{AiRuntime, EchoModel, InferenceRequest};
+use kitty_ai::{AiRuntime, AiRuntimeError, EchoModel, InferenceRequest};
 use kitty_compat::{BaselineChecker, SiteProfile};
 use kitty_core::{AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem};
 use kitty_render::{DomNode, LayoutTree, Page};
-use kitty_script::{ScriptRuntime, ScriptValue};
+use kitty_script::{ScriptError, ScriptRuntime, ScriptValue};
 use kitty_webapp::{PageComponent, Route, WebApp};
 
 struct AiAdapter {
@@ -67,17 +67,25 @@ pub struct DemoSummary {
     pub script_mode: String,
 }
 
-pub fn run_demo() -> DemoSummary {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DemoError {
+    MissingEchoModel,
+    ScriptExecution(ScriptError),
+}
+
+pub fn run_demo() -> Result<DemoSummary, DemoError> {
     run_demo_with_config(&DemoConfig::default())
 }
 
-pub fn run_demo_with_config(config: &DemoConfig) -> DemoSummary {
+pub fn run_demo_with_config(config: &DemoConfig) -> Result<DemoSummary, DemoError> {
     let mut ai_runtime = AiRuntime::new("local");
     ai_runtime.register_model(EchoModel::new("echo-v1"));
 
     let ai_output = ai_runtime
         .infer("echo-v1", &InferenceRequest::new(&config.prompt))
-        .expect("ai inference should execute successfully");
+        .map_err(|err| match err {
+            AiRuntimeError::ModelNotFound(_) => DemoError::MissingEchoModel,
+        })?;
 
     let browser = Browser::builder(BrowserConfig::default())
         .with_ai(AiAdapter {
@@ -104,7 +112,7 @@ pub fn run_demo_with_config(config: &DemoConfig) -> DemoSummary {
     let mut script = ScriptRuntime::new();
     let script_out = script
         .execute("set mode dev\nadd visits 1\nget mode")
-        .expect("script should execute successfully");
+        .map_err(DemoError::ScriptExecution)?;
     let script_mode = match script_out {
         Some(ScriptValue::Str(value)) => value,
         Some(ScriptValue::Number(value)) => value.to_string(),
@@ -130,7 +138,7 @@ pub fn run_demo_with_config(config: &DemoConfig) -> DemoSummary {
 
     let compat_score = compat.score();
 
-    DemoSummary {
+    Ok(DemoSummary {
         browser_name: browser.config().name.clone(),
         ai_provider: browser.ai_provider().unwrap_or("unbound").to_string(),
         ai_output: ai_output.text,
@@ -141,7 +149,7 @@ pub fn run_demo_with_config(config: &DemoConfig) -> DemoSummary {
         compat_score,
         webapp_home_component: home_component,
         script_mode,
-    }
+    })
 }
 
 pub fn print_summary(summary: &DemoSummary) {
@@ -163,7 +171,7 @@ mod tests {
 
     #[test]
     fn demo_summary_has_expected_baseline_values() {
-        let summary = run_demo();
+        let summary = run_demo().expect("demo should succeed");
         assert_eq!(summary.browser_name, "Kitty Browser");
         assert_eq!(summary.ai_provider, "local");
         assert_eq!(summary.ai_output, "echo:hello");
@@ -186,9 +194,18 @@ mod tests {
             requires_service_worker: false,
         };
 
-        let summary = run_demo_with_config(&config);
+        let summary = run_demo_with_config(&config).expect("demo should succeed");
         assert_eq!(summary.ai_output, "echo:custom");
         assert_eq!(summary.compat_domain, "kitty.dev");
         assert_eq!(summary.compat_score, 6);
+    }
+
+    #[test]
+    fn script_error_is_mapped_to_demo_error() {
+        let err = DemoError::ScriptExecution(ScriptError::InvalidCommand("bad".to_string()));
+        assert_eq!(
+            err,
+            DemoError::ScriptExecution(ScriptError::InvalidCommand("bad".to_string()))
+        );
     }
 }

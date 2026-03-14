@@ -2,7 +2,7 @@ use kitty_shell::{run_demo, run_demo_with_config, DemoConfig};
 
 #[test]
 fn run_demo_integration_smoke() {
-    let summary = run_demo();
+    let summary = run_demo().expect("demo should succeed");
     assert!(summary.compat_score >= 4);
     assert_eq!(summary.webapp_home_component, "home");
 }
@@ -17,7 +17,7 @@ fn run_demo_with_config_integration_smoke() {
         requires_service_worker: false,
     };
 
-    let summary = run_demo_with_config(&config);
+    let summary = run_demo_with_config(&config).expect("demo should succeed");
     assert_eq!(summary.ai_output, "echo:integration");
     assert_eq!(summary.compat_domain, "integration.test");
     assert_eq!(summary.compat_score, 6);
