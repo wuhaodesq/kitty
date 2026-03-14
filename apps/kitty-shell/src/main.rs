@@ -1,3 +1,4 @@
+use kitty_3d::{Camera, Entity, Mesh, Pipeline, Scene};
 use kitty_ai::{AiRuntime, EchoModel, InferenceRequest};
 use kitty_core::{AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem};
 use kitty_render::{DomNode, LayoutTree, Page};
@@ -52,6 +53,13 @@ fn main() {
     );
     let layout = LayoutTree::from_dom(&page.root);
 
+    let mut scene = Scene::default();
+    scene.add_entity(Entity {
+        id: 1,
+        mesh: Mesh::triangle("demo-triangle"),
+    });
+    let frame = Pipeline::new("software-3d-v0").render(&scene, &Camera::default());
+
     let mut script = ScriptRuntime::new();
     let script_out = script
         .execute("set mode dev\nadd visits 1\nget mode")
@@ -65,6 +73,8 @@ fn main() {
     println!("Script engine: {}", browser.script_engine().unwrap_or("unbound"));
     println!("Render page: {}", page.title);
     println!("Layout boxes: {}", layout.boxes.len());
+    println!("3D frame entities: {}", frame.entities);
+    println!("3D frame vertices: {}", frame.vertices);
     match script_out {
         Some(ScriptValue::Str(value)) => println!("Script mode: {}", value),
         Some(ScriptValue::Number(value)) => println!("Script output number: {}", value),

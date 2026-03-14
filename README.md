@@ -46,7 +46,8 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 │   ├── kitty-core/       # 浏览器核心抽象（配置/能力）
 │   ├── kitty-ai/         # AI 运行时抽象（provider 原型）
 │   ├── kitty-render/     # 页面/DOM/布局最小渲染抽象
-│   └── kitty-script/     # 脚本运行时最小原型
+│   ├── kitty-script/     # 脚本运行时最小原型
+│   └── kitty-3d/         # 3D 场景与渲染管线最小原型
 └── Cargo.toml            # Rust workspace
 ```
 
@@ -80,6 +81,7 @@ cargo test
   - `ScriptSubsystem`
 - 其他模块可通过适配器方式接入核心内核，避免模块间硬耦合。
 - `kitty-ai` 已支持最小模型注册与推理接口（`register_model` / `infer`）。
+- `kitty-3d` 已支持场景/网格/相机与帧统计渲染接口原型。
 
 ---
 
@@ -99,7 +101,7 @@ cargo test
 - [x] 架构设计与核心模块细分（BrowserBuilder + 子系统接口）
 - [x] 脚本运行基础能力（解释执行原型）
 - [x] AI 运行时与模型接入抽象（模型注册 + 推理接口）
-- [ ] 3D 渲染管线增强
+- [x] 3D 渲染管线增强（场景 + Pipeline 原型）
 - [ ] 开发者工具链与 Rust Web 应用支持
 - [ ] 兼容性测试基线与稳定性优化
 
@@ -107,7 +109,7 @@ cargo test
 
 ## 📌 当前状态
 
-项目目前处于早期规划/建设阶段，已完成 workspace 初始化、核心架构细分、渲染基础模块、脚本运行时与 AI 运行时接入原型。
+项目目前处于早期规划/建设阶段，已完成 workspace 初始化、核心架构细分、渲染基础模块、脚本运行时、AI 运行时与 3D 渲染管线原型。
 
 ---
 
