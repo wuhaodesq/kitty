@@ -1,0 +1,15 @@
+[workspace]
+members = [
+  "crates/kitty-core",
+  "crates/kitty-ai",
+  "crates/kitty-render",
+  "crates/kitty-script",
+  "apps/kitty-shell",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+version = "0.1.0"
+authors = ["Kitty Browser Contributors"]
