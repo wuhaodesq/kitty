@@ -9,3 +9,4 @@ authors.workspace = true
 kitty-core = { path = "../../crates/kitty-core" }
 kitty-ai = { path = "../../crates/kitty-ai" }
 kitty-render = { path = "../../crates/kitty-render" }
+kitty-script = { path = "../../crates/kitty-script" }

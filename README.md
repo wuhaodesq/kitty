@@ -45,7 +45,8 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 ├── crates/
 │   ├── kitty-core/       # 浏览器核心抽象（配置/能力）
 │   ├── kitty-ai/         # AI 运行时抽象（provider 原型）
-│   └── kitty-render/     # 页面/DOM/布局最小渲染抽象
+│   ├── kitty-render/     # 页面/DOM/布局最小渲染抽象
+│   └── kitty-script/     # 脚本运行时最小原型
 └── Cargo.toml            # Rust workspace
 ```
 
@@ -84,7 +85,7 @@ cargo test
 - [x] 初始化 Rust workspace 与基础模块骨架
 - [x] 页面渲染基础能力（DOM / Layout 最小抽象）
 - [ ] 架构设计与核心模块细分
-- [ ] 脚本运行基础能力
+- [x] 脚本运行基础能力（解释执行原型）
 - [ ] AI 运行时与模型接入抽象（扩展）
 - [ ] 3D 渲染管线增强
 - [ ] 开发者工具链与 Rust Web 应用支持
@@ -94,7 +95,7 @@ cargo test
 
 ## 📌 当前状态
 
-项目目前处于早期规划/建设阶段，已完成 workspace 初始化与渲染基础模块原型。
+项目目前处于早期规划/建设阶段，已完成 workspace 初始化、渲染基础模块与脚本运行时原型。
 
 ---
 
