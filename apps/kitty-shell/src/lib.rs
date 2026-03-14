@@ -39,6 +39,8 @@ pub struct DemoConfig {
     pub requires_webgl2: bool,
     pub requires_webassembly: bool,
     pub requires_service_worker: bool,
+    pub register_echo_model: bool,
+    pub script_source: String,
 }
 
 impl Default for DemoConfig {
@@ -49,6 +51,8 @@ impl Default for DemoConfig {
             requires_webgl2: true,
             requires_webassembly: true,
             requires_service_worker: true,
+            register_echo_model: true,
+            script_source: "set mode dev\nadd visits 1\nget mode".to_string(),
         }
     }
 }
@@ -79,7 +83,9 @@ pub fn run_demo() -> Result<DemoSummary, DemoError> {
 
 pub fn run_demo_with_config(config: &DemoConfig) -> Result<DemoSummary, DemoError> {
     let mut ai_runtime = AiRuntime::new("local");
-    ai_runtime.register_model(EchoModel::new("echo-v1"));
+    if config.register_echo_model {
+        ai_runtime.register_model(EchoModel::new("echo-v1"));
+    }
 
     let ai_output = ai_runtime
         .infer("echo-v1", &InferenceRequest::new(&config.prompt))
@@ -111,7 +117,7 @@ pub fn run_demo_with_config(config: &DemoConfig) -> Result<DemoSummary, DemoErro
 
     let mut script = ScriptRuntime::new();
     let script_out = script
-        .execute("set mode dev\nadd visits 1\nget mode")
+        .execute(&config.script_source)
         .map_err(DemoError::ScriptExecution)?;
     let script_mode = match script_out {
         Some(ScriptValue::Str(value)) => value,
@@ -192,6 +198,7 @@ mod tests {
             requires_webgl2: false,
             requires_webassembly: false,
             requires_service_worker: false,
+            ..DemoConfig::default()
         };
 
         let summary = run_demo_with_config(&config).expect("demo should succeed");
@@ -201,11 +208,27 @@ mod tests {
     }
 
     #[test]
+    fn missing_echo_model_is_mapped_to_demo_error() {
+        let config = DemoConfig {
+            register_echo_model: false,
+            ..DemoConfig::default()
+        };
+
+        let err = run_demo_with_config(&config).unwrap_err();
+        assert_eq!(err, DemoError::MissingEchoModel);
+    }
+
+    #[test]
     fn script_error_is_mapped_to_demo_error() {
-        let err = DemoError::ScriptExecution(ScriptError::InvalidCommand("bad".to_string()));
+        let config = DemoConfig {
+            script_source: "badcmd".to_string(),
+            ..DemoConfig::default()
+        };
+
+        let err = run_demo_with_config(&config).unwrap_err();
         assert_eq!(
             err,
-            DemoError::ScriptExecution(ScriptError::InvalidCommand("bad".to_string()))
+            DemoError::ScriptExecution(ScriptError::InvalidCommand("badcmd".to_string()))
         );
     }
 }

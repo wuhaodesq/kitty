@@ -92,7 +92,7 @@ cargo test
 - `kitty-3d` 已支持场景/网格/相机与帧统计渲染接口原型。
 - `kitty-compat` 已支持站点特征与兼容性评分基线检查。
 - `kitty-webapp` 已支持最小路由注册与组件解析能力。
-- `kitty-shell` 已重构为可测试的 `run_demo`/`run_demo_with_config`（`Result` 返回） 流程，并包含集成 smoke test。
+- `kitty-shell` 已重构为可测试的 `run_demo`/`run_demo_with_config`（`Result` 返回）流程，并支持模型注册与脚本输入配置，包含集成 smoke test。
 
 ---
 

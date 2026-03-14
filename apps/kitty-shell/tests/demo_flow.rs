@@ -15,6 +15,7 @@ fn run_demo_with_config_integration_smoke() {
         requires_webgl2: false,
         requires_webassembly: false,
         requires_service_worker: false,
+        ..DemoConfig::default()
     };
 
     let summary = run_demo_with_config(&config).expect("demo should succeed");
