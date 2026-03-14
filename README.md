@@ -66,6 +66,12 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 cargo run -p kitty-shell
 ```
 
+可选：通过环境变量覆盖 demo 输入（提示词与域名）：
+
+```bash
+KITTY_PROMPT="hi" KITTY_DOMAIN="kitty.dev" cargo run -p kitty-shell
+```
+
 ### 运行测试
 
 ```bash
@@ -86,7 +92,7 @@ cargo test
 - `kitty-3d` 已支持场景/网格/相机与帧统计渲染接口原型。
 - `kitty-compat` 已支持站点特征与兼容性评分基线检查。
 - `kitty-webapp` 已支持最小路由注册与组件解析能力。
-- `kitty-shell` 已重构为可测试的 `run_demo` 流程，并包含集成 smoke test。
+- `kitty-shell` 已重构为可测试的 `run_demo`/`run_demo_with_config` 流程，并包含集成 smoke test。
 
 ---
 

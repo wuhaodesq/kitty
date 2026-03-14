@@ -33,6 +33,27 @@ impl ScriptSubsystem for ScriptAdapter {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DemoConfig {
+    pub prompt: String,
+    pub domain: String,
+    pub requires_webgl2: bool,
+    pub requires_webassembly: bool,
+    pub requires_service_worker: bool,
+}
+
+impl Default for DemoConfig {
+    fn default() -> Self {
+        Self {
+            prompt: "hello".to_string(),
+            domain: "example.com".to_string(),
+            requires_webgl2: true,
+            requires_webassembly: true,
+            requires_service_worker: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DemoSummary {
     pub browser_name: String,
     pub ai_provider: String,
@@ -47,11 +68,15 @@ pub struct DemoSummary {
 }
 
 pub fn run_demo() -> DemoSummary {
+    run_demo_with_config(&DemoConfig::default())
+}
+
+pub fn run_demo_with_config(config: &DemoConfig) -> DemoSummary {
     let mut ai_runtime = AiRuntime::new("local");
     ai_runtime.register_model(EchoModel::new("echo-v1"));
 
     let ai_output = ai_runtime
-        .infer("echo-v1", &InferenceRequest::new("hello"))
+        .infer("echo-v1", &InferenceRequest::new(&config.prompt))
         .expect("ai inference should execute successfully");
 
     let browser = Browser::builder(BrowserConfig::default())
@@ -86,10 +111,10 @@ pub fn run_demo() -> DemoSummary {
         None => "<none>".to_string(),
     };
 
-    let mut site = SiteProfile::new("example.com");
-    site.requires_webgl2 = true;
-    site.requires_webassembly = true;
-    site.requires_service_worker = true;
+    let mut site = SiteProfile::new(&config.domain);
+    site.requires_webgl2 = config.requires_webgl2;
+    site.requires_webassembly = config.requires_webassembly;
+    site.requires_service_worker = config.requires_service_worker;
     let compat = BaselineChecker::default().check(&site);
 
     let mut app = WebApp::new("kitty-demo");
@@ -149,5 +174,21 @@ mod tests {
         assert_eq!(summary.compat_score, 4);
         assert_eq!(summary.webapp_home_component, "home");
         assert_eq!(summary.script_mode, "dev");
+    }
+
+    #[test]
+    fn demo_can_use_custom_config() {
+        let config = DemoConfig {
+            prompt: "custom".to_string(),
+            domain: "kitty.dev".to_string(),
+            requires_webgl2: false,
+            requires_webassembly: false,
+            requires_service_worker: false,
+        };
+
+        let summary = run_demo_with_config(&config);
+        assert_eq!(summary.ai_output, "echo:custom");
+        assert_eq!(summary.compat_domain, "kitty.dev");
+        assert_eq!(summary.compat_score, 6);
     }
 }
