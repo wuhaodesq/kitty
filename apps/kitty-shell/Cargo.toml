@@ -1,0 +1,11 @@
+[package]
+name = "kitty-shell"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+kitty-core = { path = "../../crates/kitty-core" }
+kitty-ai = { path = "../../crates/kitty-ai" }
+kitty-render = { path = "../../crates/kitty-render" }
