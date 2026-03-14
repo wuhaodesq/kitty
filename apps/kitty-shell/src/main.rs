@@ -4,6 +4,7 @@ use kitty_compat::{BaselineChecker, SiteProfile};
 use kitty_core::{AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem};
 use kitty_render::{DomNode, LayoutTree, Page};
 use kitty_script::{ScriptRuntime, ScriptValue};
+use kitty_webapp::{PageComponent, Route, WebApp};
 
 struct AiAdapter {
     provider: String,
@@ -72,6 +73,16 @@ fn main() {
     site.requires_service_worker = true;
     let compat = BaselineChecker::default().check(&site);
 
+    let mut app = WebApp::new("kitty-demo");
+    app.add_route(Route::new(
+        "/",
+        PageComponent::new("home", "<h1>Hello Kitty</h1>"),
+    ));
+    let home_component = app
+        .resolve("/")
+        .map(|r| r.component.name.as_str())
+        .unwrap_or("missing");
+
     println!("Starting {}", browser.config().name);
     println!("Capabilities: {:?}", browser.capabilities());
     println!("AI provider: {}", browser.ai_provider().unwrap_or("unbound"));
@@ -84,6 +95,7 @@ fn main() {
     println!("3D frame vertices: {}", frame.vertices);
     println!("Compat domain: {}", compat.domain);
     println!("Compat score: {}", compat.score());
+    println!("WebApp route '/': {}", home_component);
     match script_out {
         Some(ScriptValue::Str(value)) => println!("Script mode: {}", value),
         Some(ScriptValue::Number(value)) => println!("Script output number: {}", value),

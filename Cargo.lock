@@ -36,4 +36,9 @@ dependencies = [
  "kitty-core",
  "kitty-render",
  "kitty-script",
+ "kitty-webapp",
 ]
+
+[[package]]
+name = "kitty-webapp"
+version = "0.1.0"
