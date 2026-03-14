@@ -41,7 +41,8 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 ```text
 .
 ├── apps/
-│   └── kitty-shell/      # 启动入口（CLI 原型）
+│   ├── kitty-shell/      # 启动入口（CLI 原型）
+│   └── kitty-desktop/    # 桌面封装入口（Desktop 原型）
 ├── crates/
 │   ├── kitty-core/       # 浏览器核心抽象（配置/能力）
 │   ├── kitty-ai/         # AI 运行时抽象（provider 原型）
@@ -64,6 +65,9 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 
 ```bash
 cargo run -p kitty-shell
+
+# 启动桌面封装原型
+cargo run -p kitty-desktop
 ```
 
 ### 运行测试
