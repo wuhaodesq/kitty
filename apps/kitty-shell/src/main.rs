@@ -1,17 +1,15 @@
-use kitty_ai::AiRuntime;
-use kitty_core::{
-    AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem,
-};
+use kitty_ai::{AiRuntime, EchoModel, InferenceRequest};
+use kitty_core::{AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem};
 use kitty_render::{DomNode, LayoutTree, Page};
 use kitty_script::{ScriptRuntime, ScriptValue};
 
 struct AiAdapter {
-    runtime: AiRuntime,
+    provider: String,
 }
 
 impl AiSubsystem for AiAdapter {
     fn provider_name(&self) -> &str {
-        self.runtime.provider()
+        &self.provider
     }
 }
 
@@ -32,9 +30,16 @@ impl ScriptSubsystem for ScriptAdapter {
 }
 
 fn main() {
+    let mut ai_runtime = AiRuntime::new("local");
+    ai_runtime.register_model(EchoModel::new("echo-v1"));
+
+    let ai_output = ai_runtime
+        .infer("echo-v1", &InferenceRequest::new("hello"))
+        .expect("ai inference should execute successfully");
+
     let browser = Browser::builder(BrowserConfig::default())
         .with_ai(AiAdapter {
-            runtime: AiRuntime::new("local"),
+            provider: ai_runtime.provider().to_string(),
         })
         .with_render(RenderAdapter)
         .with_script(ScriptAdapter)
@@ -55,6 +60,7 @@ fn main() {
     println!("Starting {}", browser.config().name);
     println!("Capabilities: {:?}", browser.capabilities());
     println!("AI provider: {}", browser.ai_provider().unwrap_or("unbound"));
+    println!("AI output: {}", ai_output.text);
     println!("Render backend: {}", browser.render_backend().unwrap_or("unbound"));
     println!("Script engine: {}", browser.script_engine().unwrap_or("unbound"));
     println!("Render page: {}", page.title);
