@@ -118,6 +118,14 @@ cargo test
 
 ---
 
+## 🔌 作为独立 `kitty_desktop` 项目的内核依赖
+
+`kitty` 仓库只维护内核与原型能力，不直接承载 `kitty_desktop` 桌面应用代码。
+
+若你要实现独立仓库 `kitty_desktop`，请将本仓库作为内核依赖（建议用 git/path dependency），并参考 `docs/desktop-integration.md`。
+
+---
+
 ## 🤝 贡献
 
 欢迎通过 Issue / PR 提出建议与改进方向。
