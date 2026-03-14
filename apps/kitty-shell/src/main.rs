@@ -1,5 +1,6 @@
 use kitty_3d::{Camera, Entity, Mesh, Pipeline, Scene};
 use kitty_ai::{AiRuntime, EchoModel, InferenceRequest};
+use kitty_compat::{BaselineChecker, SiteProfile};
 use kitty_core::{AiSubsystem, Browser, BrowserConfig, RenderSubsystem, ScriptSubsystem};
 use kitty_render::{DomNode, LayoutTree, Page};
 use kitty_script::{ScriptRuntime, ScriptValue};
@@ -65,6 +66,12 @@ fn main() {
         .execute("set mode dev\nadd visits 1\nget mode")
         .expect("script should execute successfully");
 
+    let mut site = SiteProfile::new("example.com");
+    site.requires_webgl2 = true;
+    site.requires_webassembly = true;
+    site.requires_service_worker = true;
+    let compat = BaselineChecker::default().check(&site);
+
     println!("Starting {}", browser.config().name);
     println!("Capabilities: {:?}", browser.capabilities());
     println!("AI provider: {}", browser.ai_provider().unwrap_or("unbound"));
@@ -75,6 +82,8 @@ fn main() {
     println!("Layout boxes: {}", layout.boxes.len());
     println!("3D frame entities: {}", frame.entities);
     println!("3D frame vertices: {}", frame.vertices);
+    println!("Compat domain: {}", compat.domain);
+    println!("Compat score: {}", compat.score());
     match script_out {
         Some(ScriptValue::Str(value)) => println!("Script mode: {}", value),
         Some(ScriptValue::Number(value)) => println!("Script output number: {}", value),

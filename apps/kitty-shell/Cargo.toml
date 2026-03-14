@@ -11,3 +11,4 @@ kitty-ai = { path = "../../crates/kitty-ai" }
 kitty-render = { path = "../../crates/kitty-render" }
 kitty-script = { path = "../../crates/kitty-script" }
 kitty-3d = { path = "../../crates/kitty-3d" }
+kitty-compat = { path = "../../crates/kitty-compat" }
