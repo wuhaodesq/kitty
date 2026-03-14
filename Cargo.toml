@@ -2,6 +2,7 @@
 members = [
   "crates/kitty-core",
   "crates/kitty-ai",
+  "crates/kitty-render",
   "apps/kitty-shell",
 ]
 resolver = "2"

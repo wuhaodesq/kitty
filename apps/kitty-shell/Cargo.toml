@@ -8,3 +8,4 @@ authors.workspace = true
 [dependencies]
 kitty-core = { path = "../../crates/kitty-core" }
 kitty-ai = { path = "../../crates/kitty-ai" }
+kitty-render = { path = "../../crates/kitty-render" }

@@ -11,9 +11,14 @@ name = "kitty-core"
 version = "0.1.0"
 
 [[package]]
+name = "kitty-render"
+version = "0.1.0"
+
+[[package]]
 name = "kitty-shell"
 version = "0.1.0"
 dependencies = [
  "kitty-ai",
  "kitty-core",
+ "kitty-render",
 ]
