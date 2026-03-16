@@ -69,8 +69,9 @@ cargo run -p kitty-shell
 可选：通过环境变量覆盖 demo 输入（提示词与域名）：
 
 ```bash
-KITTY_PROMPT="hi" KITTY_DOMAIN="kitty.dev" cargo run -p kitty-shell
+KITTY_PROMPT="hi" KITTY_DOMAIN="kitty.dev" KITTY_SCRIPT="set mode qa\nget mode" cargo run -p kitty-shell
 ```
+可选：通过 `KITTY_DISABLE_ECHO_MODEL=true` 可以模拟 AI 模型缺失失败路径。
 
 ### 运行测试
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use kitty_3d::{Camera, Entity, Mesh, Pipeline, Scene};
 use kitty_ai::{AiRuntime, AiRuntimeError, EchoModel, InferenceRequest};
 use kitty_compat::{BaselineChecker, SiteProfile};
@@ -53,6 +55,24 @@ impl Default for DemoConfig {
             requires_service_worker: true,
             register_echo_model: true,
             script_source: "set mode dev\nadd visits 1\nget mode".to_string(),
+        }
+    }
+}
+
+pub fn apply_env_overrides(config: &mut DemoConfig, env: &HashMap<String, String>) {
+    if let Some(prompt) = env.get("KITTY_PROMPT") {
+        config.prompt = prompt.clone();
+    }
+    if let Some(domain) = env.get("KITTY_DOMAIN") {
+        config.domain = domain.clone();
+    }
+    if let Some(script) = env.get("KITTY_SCRIPT") {
+        config.script_source = script.replace("\\n", "\n");
+    }
+    if let Some(disable) = env.get("KITTY_DISABLE_ECHO_MODEL") {
+        let normalized = disable.to_ascii_lowercase();
+        if normalized == "1" || normalized == "true" || normalized == "yes" {
+            config.register_echo_model = false;
         }
     }
 }
@@ -230,5 +250,29 @@ mod tests {
             err,
             DemoError::ScriptExecution(ScriptError::InvalidCommand("badcmd".to_string()))
         );
+    }
+
+    #[test]
+    fn apply_env_overrides_updates_config() {
+        let mut config = DemoConfig::default();
+        let env = HashMap::from([
+            ("KITTY_PROMPT".to_string(), "env prompt".to_string()),
+            ("KITTY_DOMAIN".to_string(), "env.dev".to_string()),
+            (
+                "KITTY_SCRIPT".to_string(),
+                "set mode test\\nget mode".to_string(),
+            ),
+            (
+                "KITTY_DISABLE_ECHO_MODEL".to_string(),
+                "true".to_string(),
+            ),
+        ]);
+
+        apply_env_overrides(&mut config, &env);
+
+        assert_eq!(config.prompt, "env prompt");
+        assert_eq!(config.domain, "env.dev");
+        assert_eq!(config.script_source, "set mode test\nget mode");
+        assert!(!config.register_echo_model);
     }
 }

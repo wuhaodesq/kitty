@@ -1,21 +1,20 @@
-use kitty_shell::{print_summary, run_demo, run_demo_with_config, DemoConfig};
+use std::collections::HashMap;
+
+use kitty_shell::{apply_env_overrides, print_summary, run_demo, run_demo_with_config, DemoConfig};
 
 fn main() {
-    let prompt = std::env::var("KITTY_PROMPT").ok();
-    let domain = std::env::var("KITTY_DOMAIN").ok();
+    let env: HashMap<String, String> = std::env::vars().collect();
 
-    let result = match (prompt, domain) {
-        (None, None) => run_demo(),
-        (prompt, domain) => {
-            let mut config = DemoConfig::default();
-            if let Some(prompt) = prompt {
-                config.prompt = prompt;
-            }
-            if let Some(domain) = domain {
-                config.domain = domain;
-            }
-            run_demo_with_config(&config)
-        }
+    let result = if env.contains_key("KITTY_PROMPT")
+        || env.contains_key("KITTY_DOMAIN")
+        || env.contains_key("KITTY_SCRIPT")
+        || env.contains_key("KITTY_DISABLE_ECHO_MODEL")
+    {
+        let mut config = DemoConfig::default();
+        apply_env_overrides(&mut config, &env);
+        run_demo_with_config(&config)
+    } else {
+        run_demo()
     };
 
     match result {
