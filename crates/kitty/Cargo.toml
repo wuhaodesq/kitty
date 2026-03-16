@@ -1,0 +1,20 @@
+[package]
+name = "kitty"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Unified SDK facade for Kitty Browser prototype capabilities"
+repository = "https://github.com/wuhaodesq/kitty"
+homepage = "https://github.com/wuhaodesq/kitty"
+readme = "README.md"
+keywords = ["browser", "sdk", "ai", "3d", "rust"]
+categories = ["api-bindings", "development-tools"]
+
+[dependencies]
+kitty-ai = { path = "../kitty-ai" }
+kitty-3d = { path = "../kitty-3d" }
+kitty-compat = { path = "../kitty-compat" }
+kitty-render = { path = "../kitty-render" }
+kitty-script = { path = "../kitty-script" }
+kitty-webapp = { path = "../kitty-webapp" }

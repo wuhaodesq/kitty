@@ -7,7 +7,7 @@ members = [
   "crates/kitty-3d",
   "crates/kitty-compat",
   "crates/kitty-webapp",
-  "crates/kitty-sdk",
+  "crates/kitty",
   "apps/kitty-shell",
 ]
 resolver = "2"
