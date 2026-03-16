@@ -49,7 +49,8 @@ Kitty Browser 致力于构建一个兼顾 **性能、安全、可扩展性与兼
 │   ├── kitty-script/     # 脚本运行时最小原型
 │   ├── kitty-3d/         # 3D 场景与渲染管线最小原型
 │   ├── kitty-compat/     # 兼容性基线检查原型
-│   └── kitty-webapp/     # Rust Web 应用路由/组件原型
+│   ├── kitty-webapp/     # Rust Web 应用路由/组件原型
+│   └── kitty-sdk/        # 对外集成封装包（给其他项目直接依赖）
 └── Cargo.toml            # Rust workspace
 ```
 
@@ -82,6 +83,29 @@ cargo test
 ---
 
 
+
+## 📦 对外封装（可供其他项目使用）
+
+已提供 `kitty-sdk` 封装包，用于在其他 Rust 项目中直接集成 Kitty 原型能力（AI/脚本/渲染/3D/兼容性/WebApp）。
+
+示例（workspace path 依赖）：
+
+```toml
+[dependencies]
+kitty-sdk = { path = "../kitty/crates/kitty-sdk" }
+```
+
+核心入口：
+- `KittySdk::new()`
+- `register_echo_model()`
+- `infer_echo()`
+- `run_script()`
+- `build_layout_box_count()`
+- `render_triangle_frame()`
+- `check_site()`
+
+---
+
 ## 🏗️ 核心架构（当前原型）
 
 - `kitty-core` 提供 `BrowserBuilder` 与统一子系统接口：
@@ -93,6 +117,7 @@ cargo test
 - `kitty-3d` 已支持场景/网格/相机与帧统计渲染接口原型。
 - `kitty-compat` 已支持站点特征与兼容性评分基线检查。
 - `kitty-webapp` 已支持最小路由注册与组件解析能力。
+- `kitty-sdk` 已提供跨子系统统一封装，便于其他项目直接依赖。
 - `kitty-shell` 已重构为可测试的 `run_demo`/`run_demo_with_config`（`Result` 返回）流程，并支持模型注册与脚本输入配置，包含集成 smoke test。
 
 ---
@@ -121,7 +146,7 @@ cargo test
 
 ## 📌 当前状态
 
-项目目前处于早期规划/建设阶段，已完成 workspace 初始化、核心架构细分、渲染基础模块、脚本运行时、AI 运行时、3D 渲染管线、兼容性基线、Rust Web 应用原型与 demo 测试化改造。
+项目目前处于早期规划/建设阶段，已完成 workspace 初始化、核心架构细分、渲染基础模块、脚本运行时、AI 运行时、3D 渲染管线、兼容性基线、Rust Web 应用原型、demo 测试化改造及对外 SDK 封装。
 
 ---
 
