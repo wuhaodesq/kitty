@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageComponent {
     pub name: String,
@@ -102,7 +104,10 @@ fn split_path(path: &str) -> Vec<&str> {
     if trimmed.is_empty() {
         return Vec::new();
     }
-    trimmed.split('/').collect()
+    trimmed
+        .split('/')
+        .filter(|segment| !segment.is_empty())
+        .collect()
 }
 
 fn match_route(route_segments: &[&str], request_segments: &[&str]) -> Option<MatchResult> {
@@ -111,13 +116,18 @@ fn match_route(route_segments: &[&str], request_segments: &[&str]) -> Option<Mat
     }
 
     let mut params = Vec::new();
+    let mut param_names = HashSet::new();
     let mut static_segments = 0;
 
     for (route_segment, request_segment) in route_segments.iter().zip(request_segments.iter()) {
         if let Some(param_name) = route_segment.strip_prefix(':') {
-            if param_name.is_empty() {
+            if param_name.is_empty()
+                || request_segment.is_empty()
+                || !param_names.insert(param_name.to_string())
+            {
                 return None;
             }
+
             params.push((param_name.to_string(), request_segment.to_string()));
             continue;
         }
@@ -202,5 +212,30 @@ mod tests {
 
         assert_eq!(resolved.route.component.name, "current-user");
         assert!(resolved.params.is_empty());
+    }
+
+    #[test]
+    fn resolve_with_params_normalizes_multiple_slashes() {
+        let mut app = WebApp::new("kitty-demo");
+        app.add_route(Route::new(
+            "/users/:id",
+            PageComponent::new("user-profile", "<h1>User</h1>"),
+        ));
+
+        let resolved = app
+            .resolve_with_params("//users///42//")
+            .expect("route should resolve with normalized slashes");
+        assert_eq!(resolved.param("id"), Some("42"));
+    }
+
+    #[test]
+    fn invalid_route_with_duplicate_param_names_is_ignored() {
+        let mut app = WebApp::new("kitty-demo");
+        app.add_route(Route::new(
+            "/:id/:id",
+            PageComponent::new("invalid", "<h1>Invalid</h1>"),
+        ));
+
+        assert!(app.resolve_with_params("/a/b").is_none());
     }
 }

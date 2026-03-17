@@ -133,6 +133,10 @@ mod tests {
             sdk.resolve_webapp_user_route("/users/42?tab=profile"),
             Some("42".to_string())
         );
+        assert_eq!(
+            sdk.resolve_webapp_user_route("//users///42//"),
+            Some("42".to_string())
+        );
     }
 
     #[test]
