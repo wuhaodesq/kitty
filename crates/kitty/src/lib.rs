@@ -90,11 +90,7 @@ impl KittySdk {
         ));
 
         let resolved = app.resolve_with_params(path)?;
-        resolved
-            .params
-            .iter()
-            .find(|(name, _)| name == "id")
-            .map(|(_, value)| value.clone())
+        resolved.param("id").map(str::to_string)
     }
 }
 
@@ -129,7 +125,14 @@ mod tests {
         assert_eq!(report.score(), 4);
 
         assert_eq!(sdk.create_webapp_home_component_name(), "home");
-        assert_eq!(sdk.resolve_webapp_user_route("/users/42"), Some("42".to_string()));
+        assert_eq!(
+            sdk.resolve_webapp_user_route("/users/42"),
+            Some("42".to_string())
+        );
+        assert_eq!(
+            sdk.resolve_webapp_user_route("/users/42?tab=profile"),
+            Some("42".to_string())
+        );
     }
 
     #[test]

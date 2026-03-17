@@ -34,6 +34,21 @@ pub struct ResolvedRoute<'a> {
     pub params: Vec<(String, String)>,
 }
 
+impl<'a> ResolvedRoute<'a> {
+    pub fn param(&self, name: &str) -> Option<&str> {
+        self.params
+            .iter()
+            .find(|(key, _)| key == name)
+            .map(|(_, value)| value.as_str())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct MatchResult {
+    params: Vec<(String, String)>,
+    static_segments: usize,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct WebApp {
     pub name: String,
@@ -60,33 +75,25 @@ impl WebApp {
         let normalized = request_path.split('?').next().unwrap_or_default();
         let request_segments = split_path(normalized);
 
-        self.routes.iter().find_map(|route| {
+        let mut best: Option<ResolvedRoute<'_>> = None;
+        let mut best_static_segments = 0;
+
+        for route in &self.routes {
             let route_segments = split_path(&route.path);
+            let Some(result) = match_route(&route_segments, &request_segments) else {
+                continue;
+            };
 
-            if route_segments.len() != request_segments.len() {
-                return None;
+            if best.is_none() || result.static_segments > best_static_segments {
+                best_static_segments = result.static_segments;
+                best = Some(ResolvedRoute {
+                    route,
+                    params: result.params,
+                });
             }
+        }
 
-            let mut params = Vec::new();
-
-            for (route_segment, request_segment) in
-                route_segments.iter().zip(request_segments.iter())
-            {
-                if let Some(param_name) = route_segment.strip_prefix(':') {
-                    if param_name.is_empty() {
-                        return None;
-                    }
-                    params.push((param_name.to_string(), request_segment.to_string()));
-                    continue;
-                }
-
-                if route_segment != request_segment {
-                    return None;
-                }
-            }
-
-            Some(ResolvedRoute { route, params })
-        })
+        best
     }
 }
 
@@ -96,6 +103,36 @@ fn split_path(path: &str) -> Vec<&str> {
         return Vec::new();
     }
     trimmed.split('/').collect()
+}
+
+fn match_route(route_segments: &[&str], request_segments: &[&str]) -> Option<MatchResult> {
+    if route_segments.len() != request_segments.len() {
+        return None;
+    }
+
+    let mut params = Vec::new();
+    let mut static_segments = 0;
+
+    for (route_segment, request_segment) in route_segments.iter().zip(request_segments.iter()) {
+        if let Some(param_name) = route_segment.strip_prefix(':') {
+            if param_name.is_empty() {
+                return None;
+            }
+            params.push((param_name.to_string(), request_segment.to_string()));
+            continue;
+        }
+
+        if route_segment != request_segment {
+            return None;
+        }
+
+        static_segments += 1;
+    }
+
+    Some(MatchResult {
+        params,
+        static_segments,
+    })
 }
 
 #[cfg(test)]
@@ -128,13 +165,8 @@ mod tests {
             .expect("dynamic route should resolve");
 
         assert_eq!(resolved.route.component.name, "post-detail");
-        assert_eq!(
-            resolved.params,
-            vec![
-                ("id".to_string(), "42".to_string()),
-                ("post_id".to_string(), "99".to_string())
-            ]
-        );
+        assert_eq!(resolved.param("id"), Some("42"));
+        assert_eq!(resolved.param("post_id"), Some("99"));
     }
 
     #[test]
@@ -149,6 +181,26 @@ mod tests {
             .resolve_with_params("/?tab=overview")
             .expect("root route should resolve");
         assert_eq!(resolved.route.component.name, "home");
+        assert!(resolved.params.is_empty());
+    }
+
+    #[test]
+    fn static_route_is_preferred_over_dynamic_route() {
+        let mut app = WebApp::new("kitty-demo");
+        app.add_route(Route::new(
+            "/users/:id",
+            PageComponent::new("user-profile", "<h1>User</h1>"),
+        ));
+        app.add_route(Route::new(
+            "/users/me",
+            PageComponent::new("current-user", "<h1>Me</h1>"),
+        ));
+
+        let resolved = app
+            .resolve_with_params("/users/me")
+            .expect("route should resolve");
+
+        assert_eq!(resolved.route.component.name, "current-user");
         assert!(resolved.params.is_empty());
     }
 }
