@@ -46,6 +46,12 @@ impl<'a> ResolvedRoute<'a> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RouteValidationError {
+    EmptyParamName { path: String },
+    DuplicateParamName { path: String, name: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct MatchResult {
     params: Vec<(String, String)>,
     static_segments: usize,
@@ -67,6 +73,19 @@ impl WebApp {
 
     pub fn add_route(&mut self, route: Route) {
         self.routes.push(route);
+    }
+
+    pub fn add_route_checked(&mut self, route: Route) -> Result<(), RouteValidationError> {
+        validate_route_path(&route.path)?;
+        self.routes.push(route);
+        Ok(())
+    }
+
+    pub fn validate_routes(&self) -> Result<(), RouteValidationError> {
+        for route in &self.routes {
+            validate_route_path(&route.path)?;
+        }
+        Ok(())
     }
 
     pub fn resolve(&self, path: &str) -> Option<&Route> {
@@ -108,6 +127,29 @@ fn split_path(path: &str) -> Vec<&str> {
         .split('/')
         .filter(|segment| !segment.is_empty())
         .collect()
+}
+
+fn validate_route_path(path: &str) -> Result<(), RouteValidationError> {
+    let mut param_names = HashSet::new();
+
+    for segment in split_path(path) {
+        if let Some(param_name) = segment.strip_prefix(':') {
+            if param_name.is_empty() {
+                return Err(RouteValidationError::EmptyParamName {
+                    path: path.to_string(),
+                });
+            }
+
+            if !param_names.insert(param_name.to_string()) {
+                return Err(RouteValidationError::DuplicateParamName {
+                    path: path.to_string(),
+                    name: param_name.to_string(),
+                });
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn match_route(route_segments: &[&str], request_segments: &[&str]) -> Option<MatchResult> {
@@ -237,5 +279,44 @@ mod tests {
         ));
 
         assert!(app.resolve_with_params("/a/b").is_none());
+    }
+
+    #[test]
+    fn add_route_checked_rejects_duplicate_params() {
+        let mut app = WebApp::new("kitty-demo");
+        let err = app
+            .add_route_checked(Route::new(
+                "/:id/:id",
+                PageComponent::new("invalid", "<h1>Invalid</h1>"),
+            ))
+            .expect_err("route should be rejected");
+
+        assert_eq!(
+            err,
+            RouteValidationError::DuplicateParamName {
+                path: "/:id/:id".to_string(),
+                name: "id".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn validate_routes_detects_empty_param_name() {
+        let mut app = WebApp::new("kitty-demo");
+        app.add_route(Route::new(
+            "/users/:",
+            PageComponent::new("invalid", "<h1>Invalid</h1>"),
+        ));
+
+        let err = app
+            .validate_routes()
+            .expect_err("invalid route should be detected");
+
+        assert_eq!(
+            err,
+            RouteValidationError::EmptyParamName {
+                path: "/users/:".to_string()
+            }
+        );
     }
 }
