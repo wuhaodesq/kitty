@@ -1,3 +1,3 @@
 mod app;
 
-pub use app::{PageComponent, Route, WebApp};
+pub use app::{PageComponent, ResolvedRoute, Route, RouteValidationError, WebApp};

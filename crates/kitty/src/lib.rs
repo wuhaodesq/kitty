@@ -3,7 +3,7 @@ use kitty_ai::{AiRuntime, AiRuntimeError, EchoModel, InferenceRequest};
 use kitty_compat::{BaselineChecker, CompatibilityReport, SiteProfile};
 use kitty_render::{DomNode, LayoutTree};
 use kitty_script::{ScriptError, ScriptRuntime, ScriptValue};
-use kitty_webapp::{PageComponent, Route, WebApp};
+use kitty_webapp::{PageComponent, Route, RouteValidationError, WebApp};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum KittySdkError {
@@ -81,6 +81,30 @@ impl KittySdk {
             .map(|r| r.component.name.clone())
             .unwrap_or_else(|| "missing".to_string())
     }
+
+    pub fn validate_demo_webapp_routes(&self) -> Result<(), RouteValidationError> {
+        let mut app = WebApp::new("kitty-app");
+        app.add_route_checked(Route::new(
+            "/",
+            PageComponent::new("home", "<h1>Kitty SDK</h1>"),
+        ))?;
+        app.add_route_checked(Route::new(
+            "/users/:id",
+            PageComponent::new("user-profile", "<h1>User</h1>"),
+        ))?;
+        app.validate_routes()
+    }
+
+    pub fn resolve_webapp_user_route(&self, path: &str) -> Option<String> {
+        let mut app = WebApp::new("kitty-app");
+        app.add_route(Route::new(
+            "/users/:id",
+            PageComponent::new("user-profile", "<h1>User</h1>"),
+        ));
+
+        let resolved = app.resolve_with_params(path)?;
+        resolved.param("id").map(str::to_string)
+    }
 }
 
 #[cfg(test)]
@@ -114,6 +138,19 @@ mod tests {
         assert_eq!(report.score(), 4);
 
         assert_eq!(sdk.create_webapp_home_component_name(), "home");
+        assert!(sdk.validate_demo_webapp_routes().is_ok());
+        assert_eq!(
+            sdk.resolve_webapp_user_route("/users/42"),
+            Some("42".to_string())
+        );
+        assert_eq!(
+            sdk.resolve_webapp_user_route("/users/42?tab=profile"),
+            Some("42".to_string())
+        );
+        assert_eq!(
+            sdk.resolve_webapp_user_route("//users///42//"),
+            Some("42".to_string())
+        );
     }
 
     #[test]
